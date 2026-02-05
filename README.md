@@ -2,26 +2,34 @@
 ## New Environment setup
 
 #### in the terminal run the following to set up a new uv environment:
-uv venv --python 3.11 .venv_rakuten
+`uv venv --python 3.11 .venv_rakuten`  
 
 #### activate the environment
-source .venv_rakuten/bin/activate
+`source .venv_rakuten/bin/activate`  
 
 #### install requirements
-uv pip install --upgrade pip
-uv pip install -r requirements.txt
+```
+uv pip install --upgrade pip  
+uv pip install -r requirements.txt  
+```
 
 #### get raw data (csv files)  
-`python src/data/import_raw_data.py`  
+```
+python src/data/import_raw_data.py
+```  
 
 - then download data from https://challengedata.ens.fr/participants/challenges/35/  
 - save the images in 'raw/image_test' and 'raw/image_train'  
 
 #### preprocess the data
+```
 python src/data/make_dataset.py data/raw data/preprocessed
+```
 
 #### train the text model
+```
 python src/main.py
+```
 
 ### changes compared to the original version
 
