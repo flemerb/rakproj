@@ -1,3 +1,39 @@
+
+## New Environment setup
+
+#### in the terminal run the following to set up a new uv environment:
+uv venv --python 3.11 .venv_rakuten
+
+#### activate the environment
+source .venv_rakuten/bin/activate
+
+#### install requirements
+uv pip install --upgrade pip
+uv pip install -r requirements.txt
+
+#### get raw data (csv files)  
+`python src/data/import_raw_data.py`  
+
+- then download data from https://challengedata.ens.fr/participants/challenges/35/  
+- save the images in 'raw/image_test' and 'raw/image_train'  
+
+#### preprocess the data
+python src/data/make_dataset.py data/raw data/preprocessed
+
+#### train the text model
+python src/main.py
+
+### changes compared to the original version
+
+In `src/models/train_model.py`, line 203 I commented out `new_y_train = new_y_train.values.reshape(1350).astype("int")` because of 
+`ValueError: cannot reshape array of size 2700 into shape (1350,)`. I think this was due to dataframe/array coversion issues, but it seemed to work without it anyways. 
+
+In `src/main.py` line 29 and following (i. e. training the image and the concatenate model) were removed. A new file `src/main_with_image_and_concatenate_model.py` with the original contents of `main.py` was created to be able to go back to it later.  
+
+
+
+
+
 Project Name
 ==============================
 
