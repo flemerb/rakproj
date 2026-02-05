@@ -96,3 +96,6 @@ target/
 
 # Artifacts
 #/models/
+
+# playground
+playground.ipynb
