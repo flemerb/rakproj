@@ -98,4 +98,4 @@ target/
 #/models/
 
 # playground
-playground.ipynb
+playground.*
