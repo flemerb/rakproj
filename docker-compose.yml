@@ -1,0 +1,142 @@
+version: '3.8'
+
+services:
+  # MLflow Tracking Server
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.10.0
+    container_name: mlflow_server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+      - ./mlflow_artifacts:/mlflow_artifacts
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlruns/mlflow.db
+      --default-artifact-root /mlflow_artifacts
+      --host 0.0.0.0
+      --port 5000
+    networks:
+      - mlops_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Data Service
+  data_service:
+    build:
+      context: .
+      dockerfile: services/data_service/Dockerfile
+    container_name: data_service
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./src:/app/src
+    environment:
+      - DATA_PATH=/app/data
+      - PREPROCESSED_PATH=/app/data/preprocessed
+    networks:
+      - mlops_network
+    depends_on:
+      - mlflow
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Training Service
+  training_service:
+    build:
+      context: .
+      dockerfile: services/training_service/Dockerfile
+    container_name: training_service
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./src:/app/src
+      - ./mlruns:/app/mlruns
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - PREPROCESSED_PATH=/app/data/preprocessed
+      - MODELS_PATH=/app/models
+    networks:
+      - mlops_network
+    depends_on:
+      - mlflow
+      - data_service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prediction Service
+  prediction_service:
+    build:
+      context: .
+      dockerfile: services/prediction_service/Dockerfile
+    container_name: prediction_service
+    ports:
+      - "5003:5003"
+    volumes:
+      - ./models:/app/models
+      - ./src:/app/src
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODELS_PATH=/app/models
+    networks:
+      - mlops_network
+    depends_on:
+      - mlflow
+      - training_service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway
+  api_gateway:
+    build:
+      context: .
+      dockerfile: services/api_gateway/Dockerfile
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - DATA_SERVICE_URL=http://data_service:5001
+      - TRAINING_SERVICE_URL=http://training_service:5002
+      - PREDICTION_SERVICE_URL=http://prediction_service:5003
+      - MLFLOW_URL=http://mlflow:5000
+    networks:
+      - mlops_network
+    depends_on:
+      - data_service
+      - training_service
+      - prediction_service
+      - mlflow
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  mlops_network:
+    driver: bridge
+
+volumes:
+  mlruns:
+  mlflow_artifacts:
