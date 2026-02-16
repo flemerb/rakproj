@@ -96,6 +96,7 @@ class ImagePreprocessor:
 class TextPreprocessor:
     def __init__(self):
         nltk.download("punkt")
+        nltk.download("punkt_tab")
         nltk.download("stopwords")
         nltk.download("wordnet")
         self.lemmatizer = WordNetLemmatizer()
