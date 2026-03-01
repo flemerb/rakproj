@@ -97,5 +97,9 @@ target/
 # Artifacts
 #/models/
 
-# playground
+# own files
 playground.*
+Notes.docx
+Reports.docx
+meeting_notes.ipynb
+

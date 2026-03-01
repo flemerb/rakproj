@@ -1,0 +1,32 @@
+
+services:
+  # api
+  #api:
+  #  image: datascientest/fastapi:1.0.0
+  #  container_name: API_container
+  #  networks: 
+  #    - Exam_network
+  #  ports: 
+  #    - '8000:8000'
+  # train_text_model
+  train_text_model:
+    build: ./docker_train_text_model
+    container_name: train_text_model_container
+    networks: 
+      - rakuten_network
+    ports: 
+      - '8000:8000'
+    # the volume
+    volumes:
+      - exam_volume:/home/logs
+    # dependence
+    #depends_on:
+    #  - api
+    # environment:
+    #  LOG: '1'
+      
+networks:
+  rakuten_network:
+volumes:
+  exam_volume:
+  
