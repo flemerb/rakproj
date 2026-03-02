@@ -22,7 +22,19 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
+  # Authorization service
+  auth_service:
+    build:
+      context: .
+      dockerfile: services/auth_service/Dockerfile
+    container_name: auth_service
+    ports:
+      - "5004:5004"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - mlops_network
+    restart: unless-stopped
   # Data Service
   data_service:
     build:
@@ -222,6 +234,19 @@ services:
     networks:
       - mlops_network
     restart: unless-stopped
+    
+  # UI
+  ui:
+    image: nginx:alpine
+    container_name: rakproj_ui
+    ports:
+      - "8082:80"
+    volumes:
+      - ./services/ui:/usr/share/nginx/html
+    networks:
+      - mlops_network
+    depends_on:
+      - api_gateway  
 
 networks:
   mlops_network:
