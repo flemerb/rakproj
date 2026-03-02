@@ -18,14 +18,12 @@ with DAG(
 
     data_import = BashOperator(
         task_id="data_import",
-        bash_command="cd /opt/airflow/project && python 
-src/data/import_raw_data.py",
+        bash_command="cd /opt/airflow/project && python src/data/import_raw_data.py",
     )
 
     preprocess = BashOperator(
         task_id="preprocess",
-        bash_command="cd /opt/airflow/project && python 
-src/data/make_dataset.py data/raw data/preprocessed",
+        bash_command="cd /opt/airflow/project && python src/data/make_dataset.py data/raw data/preprocessed",
     )
 
     train = BashOperator(
