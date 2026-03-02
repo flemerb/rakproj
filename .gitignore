@@ -102,3 +102,9 @@ playground.*
 
 # Private content
 MALL/
+.Dockerfile.icloud
+.docker-compose.yaml.icloud
+Notes.docx
+Reprts.docx
+meeting_notes.ipynb
+Reports.docx
