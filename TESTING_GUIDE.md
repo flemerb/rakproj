@@ -55,13 +55,13 @@ Flask Services ──/metrics──► Prometheus (scrape every 15s) ──► G
 ### 1. Start all services
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 Wait ~30s for all health checks to pass, then verify:
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ---
@@ -97,8 +97,8 @@ curl http://localhost:8080/api/v1/services
 ### 5. Check individual service health directly
 
 ```bash
-# MLflow
-curl http://localhost:5000/health
+# MLflow (returns the web UI page, confirming the service is running)
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/
 
 # Data Service
 curl http://localhost:5001/health
@@ -386,7 +386,7 @@ The dashboard includes:
 ### 23. Stop everything
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ---
@@ -395,7 +395,7 @@ docker-compose down
 
 ```bash
 # 1. Start all 7 services
-docker-compose up -d --build
+docker compose up -d --build
 sleep 40
 
 # 2. Verify all services are healthy
@@ -427,5 +427,5 @@ curl http://localhost:3000/api/health        # Grafana health
 #    - MLflow:     http://localhost:5000
 
 # 9. Cleanup
-docker-compose down
+docker compose down
 ```
