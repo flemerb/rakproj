@@ -16,7 +16,50 @@ DATA_SERVICE_URL = os.environ.get('DATA_SERVICE_URL', 'http://data_service:5001'
 TRAINING_SERVICE_URL = os.environ.get('TRAINING_SERVICE_URL', 'http://training_service:5002')
 PREDICTION_SERVICE_URL = os.environ.get('PREDICTION_SERVICE_URL', 'http://prediction_service:5003')
 MLFLOW_URL = os.environ.get('MLFLOW_URL', 'http://mlflow:5000')
+AIRFLOW_URL = os.environ.get('AIRFLOW_URL', 'http://airflow-webserver:8080')
+AIRFLOW_USER = os.environ.get('AIRFLOW_USER', 'admin')
+AIRFLOW_PASS = os.environ.get('AIRFLOW_PASS', 'admin')
+AUTH_SERVICE_URL = os.environ.get('AUTH_SERVICE_URL', 'http://auth_service:5004')
 
+def verify_token(token):
+    resp = requests.post(f"{AUTH_SERVICE_URL}/auth/verify", json={"token": token}, timeout=5)
+    return resp.json() if resp.status_code == 200 else None
+
+def trigger_airflow_dag(dag_id, conf=None):
+    return requests.post(
+        f"{AIRFLOW_URL}/api/v1/dags/{dag_id}/dagRuns",
+        json={"conf": conf or {}},
+        auth=(AIRFLOW_USER, AIRFLOW_PASS),
+        timeout=10
+    )
+
+@app.route('/api/v1/predict', methods=['POST'])
+def predict():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = verify_token(token)
+    if not user:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+    text = request.get_json().get('text', '')
+    # Trigger Airflow DAG for prediction
+    trigger_airflow_dag('predict_pipeline', conf={'text': text})
+    # Also return immediate result directly from prediction service
+    resp = requests.post(f"{PREDICTION_SERVICE_URL}/predict", json={"text": text}, timeout=30)
+    return jsonify(resp.json()), resp.status_code
+
+@app.route('/api/v1/admin/retrain', methods=['POST'])
+def retrain():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = verify_token(token)
+    if not user or user.get('role') != 'admin':
+        return jsonify({'status': 'error', 'message': 'Forbidden — admin only'}), 403
+
+    data = request.get_json() or {}
+    trigger_airflow_dag('retrain_pipeline', conf={
+        'epochs': data.get('epochs', 10),
+        'batch_size': data.get('batch_size', 32)
+    })
+    return jsonify({'status': 'success', 'message': 'Retraining triggered via Airflow'})
 # Prometheus metrics
 REQUEST_COUNT = Counter(
     'gateway_requests_total',
@@ -275,6 +318,15 @@ def list_models():
             'message': f'Training service unavailable: {str(e)}'
         }), 503
 
+# The Users panel calls /admin/users directly on the gateway — adding a proxy route that forwards to your auth service:
+@app.route('/admin/users', methods=['GET','POST'])
+@app.route('/admin/users/<int:user_id>', methods=['DELETE'])
+def proxy_users(user_id=None):
+    url = f"{AUTH_SERVICE_URL}/admin/users" + (f"/{user_id}" if user_id else "")
+    resp = requests.request(request.method, url,
+        headers={"Authorization": request.headers.get("Authorization","")},
+        json=request.get_json(silent=True), timeout=10)
+    return jsonify(resp.json()), resp.status_code
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
