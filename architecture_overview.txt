@@ -1,0 +1,9 @@
+User/Admin UI (port 8082)
+        ↓
+API Gateway (port 8080)  ←→  Auth Service (port 5004)  [NEW]
+        ↓                              ↓
+   /predict          →   Prediction Service (port 5003)  [existing]
+   /admin/retrain    →   Training Service (port 5002)    [existing]
+   /admin/data       →   Data Service (port 5001)        [existing]
+        ↓
+   Airflow REST API (port 8081) — triggers DAGs
