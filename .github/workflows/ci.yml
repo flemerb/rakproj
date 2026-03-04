@@ -1,0 +1,12 @@
+on: push, pull_request
+
+jobs:
+  test:
+    - pip install -r requirements.txt
+    - pytest tests/
+    - flake8 src/ services/
+    - Check model files haven't been accidentally committed (they're large)
+
+  build:
+    - docker build each service image
+    - Run a quick smoke test (docker run + hit /health endpoint)

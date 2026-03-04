@@ -1,0 +1,8 @@
+on: push tag v*
+
+jobs:
+  deploy-production:
+    - Pull the image built in CD staging (same SHA, don't rebuild)
+    - Deploy to production
+    - Run smoke tests
+    - Auto-rollback if smoke tests fail

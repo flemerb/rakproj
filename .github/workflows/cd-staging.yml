@@ -1,0 +1,11 @@
+on: push to main
+
+jobs:
+  push-images:
+    - docker build + tag with git SHA
+    - push to container registry (Docker Hub, ECR, GCR etc.)
+  
+  deploy-staging:
+    - SSH into staging server / trigger Kubernetes rollout
+    - Run integration tests against staging
+    - Notify Slack/email on success or failure
