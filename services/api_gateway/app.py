@@ -203,22 +203,6 @@ def list_services():
     })
 
 
-@app.route('/api/v1/predict', methods=['POST'])
-def predict():
-    """Forward prediction request to prediction service"""
-    try:
-        response = requests.post(
-            f"{PREDICTION_SERVICE_URL}/predict",
-            json=request.get_json(),
-            timeout=30
-        )
-        return jsonify(response.json()), response.status_code
-    except requests.exceptions.RequestException as e:
-        return jsonify({
-            'status': 'error',
-            'message': f'Prediction service unavailable: {str(e)}'
-        }), 503
-
 
 @app.route('/api/v1/predict/batch', methods=['POST'])
 def predict_batch():
