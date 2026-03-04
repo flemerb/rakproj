@@ -41,8 +41,6 @@ def predict():
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
     text = request.get_json().get('text', '')
-    # Trigger Airflow DAG for prediction
-    trigger_airflow_dag('predict_pipeline', conf={'text': text})
     # Also return immediate result directly from prediction service
     resp = requests.post(f"{PREDICTION_SERVICE_URL}/predict", json={"text": text}, timeout=30)
     return jsonify(resp.json()), resp.status_code
@@ -202,22 +200,6 @@ def list_services():
         ]
     })
 
-
-@app.route('/api/v1/predict', methods=['POST'])
-def predict():
-    """Forward prediction request to prediction service"""
-    try:
-        response = requests.post(
-            f"{PREDICTION_SERVICE_URL}/predict",
-            json=request.get_json(),
-            timeout=30
-        )
-        return jsonify(response.json()), response.status_code
-    except requests.exceptions.RequestException as e:
-        return jsonify({
-            'status': 'error',
-            'message': f'Prediction service unavailable: {str(e)}'
-        }), 503
 
 
 @app.route('/api/v1/predict/batch', methods=['POST'])
