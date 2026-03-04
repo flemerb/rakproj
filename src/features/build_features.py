@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 import nltk
 from bs4 import BeautifulSoup
 import re
@@ -15,7 +16,7 @@ class DataImporter:
 
     def load_data(self):
         data = pd.read_csv(f"{self.filepath}/X_train_update.csv")
-        data["description"] = data["designation"].fillna("") + " " + data["description"].fillna("")
+        data["description"] = data["designation"] + str(data["description"])
         data = data.drop(["Unnamed: 0", "designation"], axis=1)
 
         target = pd.read_csv(f"{self.filepath}/Y_train_CVw08PX.csv")
@@ -27,6 +28,10 @@ class DataImporter:
 
         with open("models/mapper.pkl", "wb") as fichier:
             pickle.dump(modalite_mapping, fichier)
+
+        # Also save as JSON for use by prediction and training services
+        with open("models/mapper.json", "w", encoding="utf-8") as fichier:
+            json.dump({str(k): str(v) for k, v in modalite_mapping.items()}, fichier)
 
         df = pd.concat([data, target], axis=1)
 
