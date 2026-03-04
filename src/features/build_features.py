@@ -15,7 +15,7 @@ class DataImporter:
 
     def load_data(self):
         data = pd.read_csv(f"{self.filepath}/X_train_update.csv")
-        data["description"] = data["designation"] + str(data["description"])
+        data["description"] = data["designation"].fillna("") + " " + data["description"].fillna("")
         data = data.drop(["Unnamed: 0", "designation"], axis=1)
 
         target = pd.read_csv(f"{self.filepath}/Y_train_CVw08PX.csv")
