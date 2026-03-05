@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 import nltk
 from bs4 import BeautifulSoup
 import re
@@ -27,6 +28,10 @@ class DataImporter:
 
         with open("models/mapper.pkl", "wb") as fichier:
             pickle.dump(modalite_mapping, fichier)
+
+        # Also save as JSON for use by prediction and training services
+        with open("models/mapper.json", "w", encoding="utf-8") as fichier:
+            json.dump({str(k): str(v) for k, v in modalite_mapping.items()}, fichier)
 
         df = pd.concat([data, target], axis=1)
 
@@ -77,20 +82,6 @@ class DataImporter:
         y_val = y_val.sample(frac=1, random_state=42).reset_index(drop=True)
 
         return X_train, X_val, X_test, y_train, y_val, y_test
-
-
-class ImagePreprocessor:
-    def __init__(self, filepath="data/preprocessed/image_train"):
-        self.filepath = filepath
-
-    def preprocess_images_in_df(self, df):
-        df["image_path"] = (
-            f"{self.filepath}/image_"
-            + df["imageid"].astype(str)
-            + "_product_"
-            + df["productid"].astype(str)
-            + ".jpg"
-        )
 
 
 class TextPreprocessor:

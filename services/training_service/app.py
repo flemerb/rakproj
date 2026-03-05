@@ -118,7 +118,6 @@ def check_mlflow_connection():
 @app.route('/train/start', methods=['POST'])
 def start_training():
     """Start model training"""
-    global training_status
 
     if training_status['is_training']:
         return jsonify({
@@ -153,7 +152,6 @@ def start_training():
 
 def train_model(epochs, batch_size):
     """Train the LSTM model with MLflow tracking"""
-    global training_status
 
     training_status['is_training'] = True
     training_status['progress'] = 0
