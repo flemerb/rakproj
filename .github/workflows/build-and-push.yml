@@ -49,6 +49,14 @@ jobs:
       - name: Get short git SHA
         id: sha
         run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      
+      - name: Run DVC pipeline and push artifacts
+        if: github.event_name == 'push'
+        run: |
+          dvc remote modify dagshub access_key_id ${{ secrets.DAGSHUB_USERNAME }}
+          dvc remote modify dagshub secret_access_key ${{ secrets.DAGSHUB_TOKEN }}
+          dvc repro --no-commit
+          dvc push
 
       - name: Build and push
         uses: docker/build-push-action@v5
