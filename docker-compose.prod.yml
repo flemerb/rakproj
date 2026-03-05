@@ -27,9 +27,8 @@ services:
 
   # Authorization Service
   auth_service:
-    build:
-      context: .
-      dockerfile: services/auth_service/Dockerfile
+    #hier: muss die ganzen services ausfüllen, damit cicd läuft
+    image: docker.io/bflemer/prediction_service:${SHA:-latest}
     container_name: auth_service
     ports:
       - "5004:5004"
