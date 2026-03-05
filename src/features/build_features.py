@@ -96,9 +96,9 @@ class TextPreprocessor:
         )  # Vous pouvez choisir une autre langue si nécessaire
 
     def preprocess_text(self, text):
-
-        if isinstance(text, float) and math.isnan(text):
+        if text is None or (isinstance(text, float) and math.isnan(text)):
             return ""
+        
         # Supprimer les balises HTML
         text = BeautifulSoup(text, "html.parser").get_text()
 
