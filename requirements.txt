@@ -59,3 +59,4 @@ Werkzeug==3.1.5
 wrapt==2.1.1
 mlflow==2.10.0
 dvc==3.38.0
+PyYAML==6.0.2
