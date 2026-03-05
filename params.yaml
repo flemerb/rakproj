@@ -1,0 +1,13 @@
+train:
+  epochs: 10
+  batch_size: 32
+  max_words: 10000
+  max_sequence_length: 10
+  embedding_dim: 128
+  lstm_units: 128
+  num_classes: 27
+
+model:
+  type: lstm
+  optimizer: adam
+  loss: categorical_crossentropy

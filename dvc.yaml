@@ -1,0 +1,35 @@
+stages:
+  data_import:
+    cmd: python src/data/import_raw_data.py
+    deps:
+      - src/data/import_raw_data.py
+    outs:
+      - data/raw
+  
+  preprocess:
+    cmd: python src/data/make_dataset.py data/raw data/preprocessed
+    deps:
+      - src/data/make_dataset.py
+      - data/raw
+    outs:
+      - data/preprocessed
+  
+  train:
+    cmd: python src/main.py
+    deps:
+      - src/main.py
+      - src/models/train_model.py
+      - src/features/build_features.py
+      - data/preprocessed
+    params:
+      - train.epochs
+      - train.batch_size
+      - train.max_words
+      - train.max_sequence_length
+    outs:
+      - models/best_lstm_model.h5
+      - models/tokenizer_config.json
+      - models/mapper.pkl
+    metrics:
+      - mlruns:
+          cache: false
