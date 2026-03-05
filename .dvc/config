@@ -1,5 +1,6 @@
 [core]
     remote = dagshub
 ['remote "dagshub"']
-    url = s3://dvc
-    endpointurl = https://dagshub.com/flemerb/rakproj.dvc
+    url = https://dagshub.com/flemerb/rakproj.dvc
+    auth = basic
+    user = flemerb
