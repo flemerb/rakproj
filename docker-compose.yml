@@ -213,11 +213,7 @@ services:
       - ./data:/opt/airflow/project/data
       - ./models:/opt/airflow/project/models
       - ./src:/opt/airflow/project/src
-    entrypoint: >
-      bash -c "airflow db migrate && airflow users create
-        --username admin --password ${AIRFLOW_ADMIN_PASSWORD:-admin}
-        --firstname Admin --lastname User
-        --role Admin --email admin@example.com"
+    entrypoint: bash -c "airflow db migrate && airflow users create --username admin --password ${AIRFLOW_ADMIN_PASSWORD:-admin} --firstname Admin --lastname User --role Admin --email admin@example.com"
     networks:
       - mlops_network
     restart: on-failure
