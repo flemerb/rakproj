@@ -95,20 +95,13 @@ target/
 /logs/
 
 # Artifacts
-#/models/
-
-# playground
-playground.*
+/mlruns/
 
 # Private content
 MALL/
 .Dockerfile.icloud
 .docker-compose.yaml.icloud
-Notes.docx
-Reprts.docx
-meeting_notes.ipynb
-Reports.docx
 /notes
 MY_PERSONAL_GUIDE.md
 .env
-MY_PERSONAL_GUIDE.md
+.venv/
