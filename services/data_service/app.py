@@ -12,7 +12,7 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 # Add src to path
 sys.path.insert(0, '/app/src')
 
-from features.build_features import DataImporter, TextPreprocessor, ImagePreprocessor
+from features.build_features import DataImporter, TextPreprocessor
 
 app = Flask(__name__)
 CORS(app)
@@ -141,11 +141,6 @@ def preprocess_data():
         text_preprocessor = TextPreprocessor()
         text_preprocessor.preprocess_text_in_df(X_train, columns=text_columns)
         text_preprocessor.preprocess_text_in_df(X_val, columns=text_columns)
-
-        # Preprocess images
-        image_preprocessor = ImagePreprocessor(filepath=f"{PREPROCESSED_PATH}/image_train")
-        image_preprocessor.preprocess_images_in_df(X_train)
-        image_preprocessor.preprocess_images_in_df(X_val)
 
         return jsonify({
             'status': 'success',

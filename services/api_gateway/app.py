@@ -300,6 +300,41 @@ def list_models():
             'message': f'Training service unavailable: {str(e)}'
         }), 503
 
+# Auth routes — proxy login/verify to auth service
+@app.route('/auth/login', methods=['POST'])
+def auth_login():
+    """Proxy login request to auth service"""
+    try:
+        resp = requests.post(
+            f"{AUTH_SERVICE_URL}/auth/login",
+            json=request.get_json(),
+            timeout=10
+        )
+        return jsonify(resp.json()), resp.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Auth service unavailable: {str(e)}'
+        }), 503
+
+
+@app.route('/auth/verify', methods=['POST'])
+def auth_verify():
+    """Proxy token verification to auth service"""
+    try:
+        resp = requests.post(
+            f"{AUTH_SERVICE_URL}/auth/verify",
+            json=request.get_json(),
+            timeout=5
+        )
+        return jsonify(resp.json()), resp.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Auth service unavailable: {str(e)}'
+        }), 503
+
+
 # The Users panel calls /admin/users directly on the gateway — adding a proxy route that forwards to your auth service:
 @app.route('/admin/users', methods=['GET','POST'])
 @app.route('/admin/users/<int:user_id>', methods=['DELETE'])

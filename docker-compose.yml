@@ -243,10 +243,11 @@ services:
       - "8082:80"
     volumes:
       - ./services/ui:/usr/share/nginx/html
+      - ./diagrams:/usr/share/nginx/html/diagrams
     networks:
       - mlops_network
     depends_on:
-      - api_gateway  
+      - api_gateway
   # Prometheus - Metrics Collection
   prometheus:
     image: prom/prometheus:v2.51.0
