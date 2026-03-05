@@ -95,7 +95,6 @@ target/
 /logs/
 
 # Artifacts
-/models/
 /mlruns/
 
 # Private content
