@@ -43,11 +43,8 @@ def train_with_mlflow():
         # Preprocess text and images
         print("Preprocessing data...")
         text_preprocessor = TextPreprocessor()
-        image_preprocessor = ImagePreprocessor()
         text_preprocessor.preprocess_text_in_df(X_train, columns=["description"])
         text_preprocessor.preprocess_text_in_df(X_val, columns=["description"])
-        image_preprocessor.preprocess_images_in_df(X_train)
-        image_preprocessor.preprocess_images_in_df(X_val)
         
         # Train LSTM model with MLflow callback
         print("Training LSTM Model...")

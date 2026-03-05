@@ -113,3 +113,4 @@ MY_PERSONAL_GUIDE.md
 .env
 MY_PERSONAL_GUIDE.md
 mlruns/
+models/mapper.json
