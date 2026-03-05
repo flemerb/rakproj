@@ -30,6 +30,7 @@ stages:
       - models/best_lstm_model.h5
       - models/tokenizer_config.json
       - models/mapper.pkl
+      - models/mapper.json   
     metrics:
-      - mlruns:
+      - models/metrics.json:     
           cache: false
