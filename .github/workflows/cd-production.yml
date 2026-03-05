@@ -1,0 +1,53 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'  # triggered by e.g. git tag v1.2.0 && git push --tags
+
+env:
+  REGISTRY: docker.io/flemerb
+  SERVICES: "api_gateway prediction_service training_service data_service auth_service"
+
+jobs:
+  promote-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Get SHA of the commit this tag points to
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Promote SHA images to latest
+        run: |
+          for SERVICE in $SERVICES; do
+            SHA_IMAGE=${{ env.REGISTRY }}/${SERVICE}:${{ steps.sha.outputs.short }}
+            LATEST_IMAGE=${{ env.REGISTRY }}/${SERVICE}:latest
+
+            docker pull $SHA_IMAGE
+            docker tag $SHA_IMAGE $LATEST_IMAGE
+            docker push $LATEST_IMAGE
+
+            echo "Promoted $SHA_IMAGE → $LATEST_IMAGE"
+          done
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /opt/rakproj
+            export SHA=${{ steps.sha.outputs.short }}
+            docker-compose pull
+            docker-compose up -d --no-build
