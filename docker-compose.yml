@@ -1,4 +1,5 @@
 services:
+
   # MLflow Tracking Server
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.0
@@ -22,7 +23,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  # Authorization service
+      start_period: 20s
+
+  # Authorization Service
   auth_service:
     build:
       context: .
@@ -32,9 +35,19 @@ services:
       - "5004:5004"
     volumes:
       - ./data:/app/data
+    environment:
+      - DB_PATH=/app/data/users.db
+      - GRAFANA_PASSWORD=${GRAFANA_PASSWORD}
     networks:
       - mlops_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5004/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   # Data Service
   data_service:
     build:
@@ -53,13 +66,15 @@ services:
     networks:
       - mlops_network
     depends_on:
-      - mlflow
+      mlflow:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
   # Training Service
   training_service:
@@ -81,14 +96,17 @@ services:
     networks:
       - mlops_network
     depends_on:
-      - mlflow
-      - data_service
+      mlflow:
+        condition: service_healthy
+      data_service:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
   # Prediction Service
   prediction_service:
@@ -107,14 +125,17 @@ services:
     networks:
       - mlops_network
     depends_on:
-      - mlflow
-      - training_service
+      mlflow:
+        condition: service_healthy
+      training_service:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
   # API Gateway
   api_gateway:
@@ -128,33 +149,49 @@ services:
       - DATA_SERVICE_URL=http://data_service:5001
       - TRAINING_SERVICE_URL=http://training_service:5002
       - PREDICTION_SERVICE_URL=http://prediction_service:5003
+      - AUTH_SERVICE_URL=http://auth_service:5004
       - MLFLOW_URL=http://mlflow:5000
+      - AIRFLOW_URL=http://airflow-webserver:8080
+      - AIRFLOW_USER=${AIRFLOW_USER:-admin}
+      - AIRFLOW_PASS=${AIRFLOW_PASS:-admin}
     networks:
       - mlops_network
     depends_on:
-      - data_service
-      - training_service
-      - prediction_service
-      - mlflow
+      auth_service:
+        condition: service_healthy
+      data_service:
+        condition: service_healthy
+      training_service:
+        condition: service_healthy
+      prediction_service:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s
 
-# Airflow metadata DB
+  # Airflow metadata DB
   airflow-db:
     image: postgres:15
     container_name: airflow_db
     environment:
       POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow}
       POSTGRES_DB: airflow
     volumes:
       - airflow_db_data:/var/lib/postgresql/data
     networks:
       - mlops_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Airflow init (runs once to create DB tables and admin user)
   airflow-init:
@@ -163,10 +200,11 @@ services:
       dockerfile: airflow/Dockerfile
     container_name: airflow_init
     depends_on:
-      - airflow-db
+      airflow-db:
+        condition: service_healthy
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:-airflow}@airflow-db/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
@@ -175,28 +213,27 @@ services:
       - ./data:/opt/airflow/project/data
       - ./models:/opt/airflow/project/models
       - ./src:/opt/airflow/project/src
-    entrypoint: >
-      bash -c "airflow db migrate && airflow users create
-        --username admin --password admin
-        --firstname Admin --lastname User
-        --role Admin --email admin@example.com"
+    entrypoint: bash -c "airflow db migrate && airflow users create --username admin --password ${AIRFLOW_ADMIN_PASSWORD:-admin} --firstname Admin --lastname User --role Admin --email admin@example.com"
     networks:
       - mlops_network
+    restart: on-failure
 
-  # Airflow Webserver (UI)
+  # Airflow Webserver
   airflow-webserver:
     build:
       context: .
       dockerfile: airflow/Dockerfile
     container_name: airflow_webserver
     depends_on:
-      - airflow-db
-      - airflow-init
+      airflow-db:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
     ports:
       - "8081:8080"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:-airflow}@airflow-db/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
@@ -209,6 +246,12 @@ services:
     networks:
       - mlops_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # Airflow Scheduler
   airflow-scheduler:
@@ -217,11 +260,13 @@ services:
       dockerfile: airflow/Dockerfile
     container_name: airflow_scheduler
     depends_on:
-      - airflow-db
-      - airflow-init
+      airflow-db:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:-airflow}@airflow-db/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
@@ -234,7 +279,7 @@ services:
     networks:
       - mlops_network
     restart: unless-stopped
-    
+
   # UI
   ui:
     image: nginx:alpine
@@ -249,6 +294,11 @@ services:
     depends_on:
       - api_gateway
   # Prometheus - Metrics Collection
+      api_gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Prometheus
   prometheus:
     image: prom/prometheus:v2.51.0
     container_name: prometheus
@@ -265,18 +315,23 @@ services:
     networks:
       - mlops_network
     depends_on:
-      - api_gateway
-      - data_service
-      - training_service
-      - prediction_service
+      api_gateway:
+        condition: service_healthy
+      data_service:
+        condition: service_healthy
+      training_service:
+        condition: service_healthy
+      prediction_service:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
-  # Grafana - Metrics Visualization
+  # Grafana
   grafana:
     image: grafana/grafana:10.4.0
     container_name: grafana
@@ -293,13 +348,15 @@ services:
     networks:
       - mlops_network
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
 networks:
   mlops_network:

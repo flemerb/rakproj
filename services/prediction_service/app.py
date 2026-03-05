@@ -252,21 +252,26 @@ def predict_batch():
 
         BATCH_SIZE_HISTOGRAM.observe(len(texts))
 
-        results = []
+        # Preprocess all texts
         preprocessor = TextPreprocessor()
-
+        all_padded = []
         for text in texts:
-            cleaned_text = preprocessor.preprocess_text(text)
-            sequences = tokenizer.texts_to_sequences([cleaned_text])
+            cleaned = preprocessor.preprocess_text(text)
+            sequences = tokenizer.texts_to_sequences([cleaned])
             padded = pad_sequences(sequences, maxlen=10, padding='post')
+            all_padded.append(padded[0])
 
-            start_time = time.time()
-            predictions = model.predict(padded)
-            inference_time = time.time() - start_time
-            PREDICTION_LATENCY.observe(inference_time)
+        # Single batched model call
+        batch_input = np.array(all_padded)
+        start_time = time.time()
+        all_predictions = model.predict(batch_input)
+        PREDICTION_LATENCY.observe(time.time() - start_time)
 
-            predicted_class = int(np.argmax(predictions[0]))
-            confidence = float(np.max(predictions[0]))
+        # Build results
+        results = []
+        for i, text in enumerate(texts):
+            predicted_class = int(np.argmax(all_predictions[i]))
+            confidence = float(np.max(all_predictions[i]))
 
             PREDICTION_COUNT.labels(predicted_class=str(predicted_class)).inc()
             PREDICTION_CONFIDENCE.observe(confidence)

@@ -46,16 +46,6 @@ mlflow_artifacts/
 logs/
 *.log
 
-# Model files (tracked by DVC)
-*.h5
-*.pkl
-*.h5py
-
-# Data files (tracked by DVC)
-data/raw/
-data/preprocessed/
-data/external/
-
 # Temporary files
 *.tmp
 *.temp
