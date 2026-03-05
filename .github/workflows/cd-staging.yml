@@ -1,9 +1,10 @@
 name: Deploy to Staging
 
+name: Deploy to Staging
+
+# only runs when manually triggered, not on push, as no server is set up
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch: 
 
 env:
   REGISTRY: docker.io/flemerb
