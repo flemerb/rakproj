@@ -31,3 +31,50 @@ stages:
       md5: e7340ffd54cfbf93e73a3908bcb4ee80.dir
       size: 63854373
       nfiles: 3
+  train:
+    cmd: python src/main.py
+    deps:
+    - path: data/preprocessed
+      hash: md5
+      md5: e7340ffd54cfbf93e73a3908bcb4ee80.dir
+      size: 63854373
+      nfiles: 3
+    - path: src/features/build_features.py
+      hash: md5
+      md5: 8ecce226221880a61bff028ff8fb6099
+      size: 4098
+    - path: src/main.py
+      hash: md5
+      md5: 73dc4deebf0c3ddd537d481e44066e28
+      size: 3372
+    - path: src/models/train_model.py
+      hash: md5
+      md5: 9cf02f26cb6c47c7280a6a0c6b868fa3
+      size: 4455
+    params:
+      params.yaml:
+        train.batch_size: 32
+        train.epochs: 10
+        train.max_sequence_length: 10
+        train.max_words: 10000
+    outs:
+    - path: models/best_lstm_model.h5
+      hash: md5
+      md5: a5faa7789c476d50b4badba22a5d6131
+      size: 17014032
+    - path: models/mapper.json
+      hash: md5
+      md5: df7d3aeaf1a30d4b0efe78ac78e81cbf
+      size: 360
+    - path: models/mapper.pkl
+      hash: md5
+      md5: bdc01efbae713fb4c49d7b1dd0d6a2a9
+      size: 668
+    - path: models/metrics.json
+      hash: md5
+      md5: 8197d04d3941f7d5cd7ef8578f604fa5
+      size: 140
+    - path: models/tokenizer_config.json
+      hash: md5
+      md5: 9614e90dfabc72e74bb5deee01575896
+      size: 1745676
