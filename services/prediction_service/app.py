@@ -128,8 +128,8 @@ def predict():
         
         # Preprocess text
         preprocessor = TextPreprocessor()
-        cleaned_text = preprocessor._preprocess_text(text)
-        
+        cleaned_text = preprocessor.preprocess_text(text)
+
         # Tokenize and pad
         sequences = tokenizer.texts_to_sequences([cleaned_text])
         padded = pad_sequences(sequences, maxlen=10, padding='post')
@@ -179,7 +179,7 @@ def predict_batch():
         preprocessor = TextPreprocessor()
         
         for text in texts:
-            cleaned_text = preprocessor._preprocess_text(text)
+            cleaned_text = preprocessor.preprocess_text(text)
             sequences = tokenizer.texts_to_sequences([cleaned_text])
             padded = pad_sequences(sequences, maxlen=10, padding='post')
             
