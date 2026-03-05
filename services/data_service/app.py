@@ -12,7 +12,7 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 # Add src to path
 sys.path.insert(0, '/app/src')
 
-from features.build_features import DataImporter, TextPreprocessor, ImagePreprocessor
+from features.build_features import DataImporter, TextPreprocessor
 
 app = Flask(__name__)
 CORS(app)
