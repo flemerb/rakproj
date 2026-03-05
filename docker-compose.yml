@@ -288,9 +288,12 @@ services:
       - "8082:80"
     volumes:
       - ./services/ui:/usr/share/nginx/html
+      - ./diagrams:/usr/share/nginx/html/diagrams
     networks:
       - mlops_network
     depends_on:
+      - api_gateway
+  # Prometheus - Metrics Collection
       api_gateway:
         condition: service_healthy
     restart: unless-stopped

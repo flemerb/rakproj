@@ -264,7 +264,7 @@
     .content {
       flex: 1;
       padding: 2.5rem 2rem;
-      max-width: 900px;
+      max-width: 1200px;
       width: 100%;
       margin: 0 auto;
     }
@@ -568,6 +568,154 @@
       font-size: 0.875rem;
     }
     .empty-state .big { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+    /* ── DASHBOARD PANEL ── */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .dash-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: border-color 0.2s;
+    }
+    .service-card:hover { border-color: var(--accent); }
+    .service-card .svc-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .service-card .svc-info h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .service-card .svc-info .svc-meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .service-card .svc-status {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .ext-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      color: var(--accent2);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .ext-link:hover { border-color: var(--accent2); background: rgba(71,200,255,0.08); }
+
+    .diagram-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .diagram-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .diagram-item:hover { border-color: var(--accent); }
+    .diagram-item img {
+      width: 100%;
+      display: block;
+    }
+    .diagram-item .diagram-caption {
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .iframe-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .iframe-wrap .iframe-header {
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .iframe-wrap iframe {
+      width: 100%;
+      height: 350px;
+      border: none;
+    }
+
+    /* Full-screen diagram overlay */
+    .diagram-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .diagram-overlay.show { display: flex; }
+    .diagram-overlay img {
+      max-width: 95vw;
+      max-height: 95vh;
+      border-radius: 8px;
+    }
+
+    .dash-section-title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 2rem 0 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .dash-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
   </style>
 </head>
 <body>
@@ -600,7 +748,8 @@
   <header class="topbar">
     <div class="topbar-brand">Rakuten / Classifier</div>
     <nav class="topbar-nav">
-      <button class="nav-btn active" id="nav-predict" onclick="showPanel('predict')">Predict</button>
+      <button class="nav-btn active" id="nav-dashboard" onclick="showPanel('dashboard')">Dashboard</button>
+      <button class="nav-btn" id="nav-predict" onclick="showPanel('predict')">Predict</button>
       <button class="nav-btn" id="nav-history" onclick="showPanel('history')">History</button>
       <button class="nav-btn admin-only" id="nav-retrain" onclick="showPanel('retrain')" style="display:none">Retrain</button>
       <button class="nav-btn admin-only" id="nav-users" onclick="showPanel('users')" style="display:none">Users</button>
@@ -616,8 +765,117 @@
 
   <main class="content">
 
+    <!-- DASHBOARD PANEL -->
+    <div id="panel-dashboard" class="panel active" style="max-width:1200px">
+      <div class="panel-title">System Dashboard</div>
+
+      <!-- Service Health -->
+      <div class="dash-grid three" id="health-grid">
+        <div class="service-card">
+          <div class="svc-icon" style="background:rgba(142,68,173,0.15);color:#8E44AD">GW</div>
+          <div class="svc-info">
+            <h4>API Gateway</h4>
+            <div class="svc-meta">:8080</div>
+          </div>
+          <div class="svc-status" id="health-gateway"><span class="status-dot yellow"></span>checking</div>
+        </div>
+        <div class="service-card">
+          <div class="svc-icon" style="background:rgba(230,126,34,0.15);color:#E67E22">DS</div>
+          <div class="svc-info">
+            <h4>Data Service</h4>
+            <div class="svc-meta">:5001</div>
+          </div>
+          <div class="svc-status" id="health-data"><span class="status-dot yellow"></span>checking</div>
+        </div>
+        <div class="service-card">
+          <div class="svc-icon" style="background:rgba(230,126,34,0.15);color:#E67E22">TS</div>
+          <div class="svc-info">
+            <h4>Training Service</h4>
+            <div class="svc-meta">:5002</div>
+          </div>
+          <div class="svc-status" id="health-training"><span class="status-dot yellow"></span>checking</div>
+        </div>
+        <div class="service-card">
+          <div class="svc-icon" style="background:rgba(230,126,34,0.15);color:#E67E22">PS</div>
+          <div class="svc-info">
+            <h4>Prediction Service</h4>
+            <div class="svc-meta">:5003</div>
+          </div>
+          <div class="svc-status" id="health-prediction"><span class="status-dot yellow"></span>checking</div>
+        </div>
+        <div class="service-card">
+          <div class="svc-icon" style="background:rgba(26,188,156,0.15);color:#1ABC9C">AU</div>
+          <div class="svc-info">
+            <h4>Auth Service</h4>
+            <div class="svc-meta">:5004</div>
+          </div>
+          <div class="svc-status" id="health-auth"><span class="status-dot yellow"></span>checking</div>
+        </div>
+        <div class="service-card">
+          <div class="svc-icon" style="background:rgba(39,174,96,0.15);color:#27AE60">ML</div>
+          <div class="svc-info">
+            <h4>MLflow</h4>
+            <div class="svc-meta">:5000</div>
+          </div>
+          <div class="svc-status" id="health-mlflow"><span class="status-dot yellow"></span>checking</div>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" onclick="checkHealth()" style="margin-bottom:1rem;font-size:0.7rem">Refresh Health</button>
+
+      <!-- External Links -->
+      <div class="dash-section-title">External UIs</div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem">
+        <a href="http://localhost:3000" target="_blank" class="ext-link">Grafana Dashboard :3000</a>
+        <a href="http://localhost:5000" target="_blank" class="ext-link">MLflow Tracking :5000</a>
+        <a href="http://localhost:8081" target="_blank" class="ext-link">Airflow DAGs :8081</a>
+        <a href="http://localhost:9090" target="_blank" class="ext-link">Prometheus :9090</a>
+      </div>
+
+      <!-- Grafana Embed -->
+      <div class="dash-section-title">Monitoring (Grafana)</div>
+      <div class="iframe-wrap">
+        <div class="iframe-header">
+          <span>Grafana — Rakuten MLOps Dashboard</span>
+          <a href="http://localhost:3000" target="_blank" style="color:var(--accent2);font-size:0.7rem;text-decoration:none">Open full view</a>
+        </div>
+        <iframe src="http://localhost:3000/d/rakuten-mlops/rakuten-mlops-performance-monitoring?orgId=1&kiosk&theme=dark"
+                loading="lazy" title="Grafana Dashboard"></iframe>
+      </div>
+
+      <!-- Architecture Diagrams -->
+      <div class="dash-section-title">Architecture Diagrams</div>
+      <div class="diagram-gallery">
+        <div class="diagram-item" onclick="openDiagram(this)">
+          <img src="/diagrams/1_complete_architecture.png" alt="Complete Architecture" loading="lazy"/>
+          <div class="diagram-caption">1. Complete Architecture (13 Containers)</div>
+        </div>
+        <div class="diagram-item" onclick="openDiagram(this)">
+          <img src="/diagrams/2_microservices_architecture.png" alt="Microservices Architecture" loading="lazy"/>
+          <div class="diagram-caption">2. Microservices Communication</div>
+        </div>
+        <div class="diagram-item" onclick="openDiagram(this)">
+          <img src="/diagrams/3_ml_pipeline.png" alt="ML Pipeline" loading="lazy"/>
+          <div class="diagram-caption">3. ML Pipeline — Data to Prediction</div>
+        </div>
+        <div class="diagram-item" onclick="openDiagram(this)">
+          <img src="/diagrams/4_monitoring_architecture.png" alt="Monitoring Architecture" loading="lazy"/>
+          <div class="diagram-caption">4. Monitoring Architecture (Prometheus + Grafana)</div>
+        </div>
+        <div class="diagram-item" onclick="openDiagram(this)">
+          <img src="/diagrams/5_technology_stack.png" alt="Technology Stack" loading="lazy"/>
+          <div class="diagram-caption">5. Technology Stack</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagram overlay (click to zoom) -->
+    <div class="diagram-overlay" id="diagram-overlay" onclick="this.classList.remove('show')">
+      <img id="diagram-overlay-img" src="" alt="Diagram"/>
+    </div>
+
     <!-- PREDICT PANEL -->
-    <div id="panel-predict" class="panel active">
+    <div id="panel-predict" class="panel">
       <div class="panel-title">Classify Product</div>
       <div class="predict-card">
         <div class="form-group" style="margin:0">
@@ -802,7 +1060,7 @@
     if (currentUser.role === 'admin') {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
     }
-    showPanel('predict');
+    showPanel('dashboard');
   }
 
   function doLogout() {
@@ -834,6 +1092,7 @@
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`panel-${name}`).classList.add('active');
     document.getElementById(`nav-${name}`).classList.add('active');
+    if (name === 'dashboard') checkHealth();
     if (name === 'history') renderHistory();
     if (name === 'users') loadUsers();
   }
@@ -1042,6 +1301,38 @@
       toast(`Demo: User "${username}" would be deleted.`, 'success');
       loadUsers();
     }
+  }
+
+  // ── DASHBOARD ───────────────────────────────────────────────────────
+  async function checkHealth() {
+    const checks = [
+      { id: 'health-gateway', url: `${API}/health` },
+      { id: 'health-data', url: 'http://localhost:5001/health' },
+      { id: 'health-training', url: 'http://localhost:5002/health' },
+      { id: 'health-prediction', url: 'http://localhost:5003/health' },
+      { id: 'health-auth', url: 'http://localhost:5004/health' },
+      { id: 'health-mlflow', url: 'http://localhost:5000/' },
+    ];
+
+    for (const check of checks) {
+      const el = document.getElementById(check.id);
+      try {
+        const res = await fetch(check.url, { mode: 'cors', signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          el.innerHTML = '<span class="status-dot green"></span>healthy';
+        } else {
+          el.innerHTML = '<span class="status-dot red"></span>error';
+        }
+      } catch {
+        el.innerHTML = '<span class="status-dot red"></span>offline';
+      }
+    }
+  }
+
+  function openDiagram(el) {
+    const src = el.querySelector('img').src;
+    document.getElementById('diagram-overlay-img').src = src;
+    document.getElementById('diagram-overlay').classList.add('show');
   }
 
   // ── TOAST ─────────────────────────────────────────────────────────
