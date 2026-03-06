@@ -1,6 +1,9 @@
 #deep learning models
 *.h5
 
+# Claude Code project documentation (local only)
+CLAUDE.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
