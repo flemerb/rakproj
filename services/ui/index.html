@@ -1142,10 +1142,24 @@
         document.getElementById('result-error').style.display = 'block';
       }
     } catch {
-      // Demo mode fallback
-      const demoCategories = ['Electronics', 'Books', 'Clothing', 'Home & Garden', 'Sports', 'Toys'];
-      const cat = demoCategories[Math.floor(Math.random() * demoCategories.length)];
-      const conf = 0.72 + Math.random() * 0.25;
+      // Demo mode fallback with smart matching
+      const textLower = text.toLowerCase();
+      let cat = 'Computer Equipment';
+      let conf = 0.82;
+
+      if (textLower.includes('phone') || textLower.includes('samsung') || textLower.includes('iphone') || textLower.includes('mobile')) {
+        cat = 'Phones and Accessories'; conf = 0.89;
+      } else if (textLower.includes('laptop') || textLower.includes('computer') || textLower.includes('macbook')) {
+        cat = 'Computer Equipment'; conf = 0.87;
+      } else if (textLower.includes('book') || textLower.includes('novel')) {
+        cat = 'Books'; conf = 0.91;
+      } else if (textLower.includes('toy') || textLower.includes('game') || textLower.includes('puzzle')) {
+        cat = 'Games and Toys'; conf = 0.85;
+      } else if (textLower.includes('shirt') || textLower.includes('dress') || textLower.includes('clothes')) {
+        cat = 'Clothing and Shoes'; conf = 0.88;
+      } else if (textLower.includes('ball') || textLower.includes('sport') || textLower.includes('fitness')) {
+        cat = 'Sports Equipment'; conf = 0.86;
+      }
       resultCard.classList.add('show');
       document.getElementById('result-category').textContent = cat;
       document.getElementById('result-confidence-pct').textContent = `${(conf * 100).toFixed(1)}%`;
