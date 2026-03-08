@@ -1,0 +1,478 @@
+================================================================================
+  RAKUTEN MLOPS - PRODUCT CLASSIFICATION SYSTEM
+  20-Minute Presentation Script (4 x 5-Minute Segments)
+  Speakers: A and B | Dashboard: http://localhost:8082
+================================================================================
+
+
+================================================================================
+PRESENTATION OVERVIEW & SPEAKER RESPONSIBILITIES
+================================================================================
+
+TOTAL DURATION: ~20 minutes (19.7 min at normal pace with demos)
+SPEAKING PACE: 130 words per minute (conversational with natural pauses)
+PRESENTATION URL: http://localhost:8082
+LOGIN CREDENTIALS: admin / admin123
+
+--------------------------------------------------------------------------------
+SPEAKER A RESPONSIBILITIES (Total: ~9.5 minutes)
+--------------------------------------------------------------------------------
+
+SEGMENT 1 (0:00 - 5:00) — 4.9 minutes
+  ✓ Welcome and project introduction
+  ✓ Live login demonstration (admin/admin123)
+  ✓ Dashboard overview and service health cards
+  ✓ Explain Complete Architecture diagram (Diagram 1)
+  ✓ Explain Technology Stack diagram (Diagram 5)
+  ✓ Transition to Speaker B
+
+SEGMENT 3 (10:00 - 15:00) — 4.6 minutes
+  ✓ Live prediction demonstration
+  ✓ Behind-the-scenes explanation of ML pipeline
+  ✓ History panel demonstration
+  ✓ Retraining workflow explanation (DO NOT CLICK the button)
+  ✓ Monitoring Architecture diagram explanation (Diagram 4)
+  ✓ Transition to Speaker B
+
+KEY ACTIONS FOR SPEAKER A:
+  • Perform live login
+  • Click "Refresh Health" button
+  • Type and submit prediction: "Samsung Galaxy smartphone 128GB, dual camera, fast charging"
+  • Navigate between Dashboard → Predict → History → Retrain → Dashboard tabs
+  • Click and explain architecture diagrams
+  • Demonstrate smooth UI interactions
+
+--------------------------------------------------------------------------------
+SPEAKER B RESPONSIBILITIES (Total: ~10.2 minutes)
+--------------------------------------------------------------------------------
+
+SEGMENT 2 (5:00 - 10:00) — 4.2 minutes
+  ✓ Explain Microservices Communication diagram (Diagram 2)
+  ✓ Explain ML Pipeline diagram in detail (Diagram 3)
+  ✓ Describe data flow from raw data to predictions
+  ✓ Explain DVC, MLflow, and Airflow integration
+  ✓ Transition to Speaker A
+
+SEGMENT 4 (15:00 - 20:00) — 5.9 minutes
+  ✓ Explain complete Technology Stack (revisit Diagram 5 context)
+  ✓ Security and authentication deep dive (navigate to Users tab)
+  ✓ CI/CD pipeline explanation
+  ✓ System maintenance overview
+  ✓ Final summary and conclusion
+  ✓ Open for questions
+
+KEY ACTIONS FOR SPEAKER B:
+  • Navigate and explain complex architecture diagrams
+  • Navigate to Users tab for security demonstration
+  • Point to users table and role-based access control
+  • Deliver strong conclusion with full system summary
+  • Handle Q&A session
+
+--------------------------------------------------------------------------------
+TIMING BREAKDOWN
+--------------------------------------------------------------------------------
+
+Segment 1 (Speaker A):  4.9 min  |████████████████░░░░| 25%
+Segment 2 (Speaker B):  4.2 min  |█████████████░░░░░░░| 21%
+Segment 3 (Speaker A):  4.6 min  |███████████████░░░░░| 23%
+Segment 4 (Speaker B):  5.9 min  |██████████████████░░| 30%
+                        ─────────
+TOTAL:                 19.7 min  |████████████████████| 100%
+
+Balance: Speaker A = 9.5 min (48%) | Speaker B = 10.2 min (52%)
+Difference: 0.7 minutes — EXCELLENT BALANCE ✓
+
+--------------------------------------------------------------------------------
+IMPORTANT NOTES FOR BOTH SPEAKERS
+--------------------------------------------------------------------------------
+
+✓ BEFORE PRESENTATION:
+  • Run "make presentation" or "docker compose up -d" to start all services
+  • Open http://localhost:8082 in browser (zoom to 90% for projector)
+  • Test login with admin/admin123
+  • Click "Refresh Health" to ensure all services are green
+  • Have backup product description ready if needed
+
+⚠️ DURING PRESENTATION:
+  • Speak at ~130 words per minute (conversational, not rushed)
+  • DO NOT click "Start Retraining" button in Segment 3 (just point to it)
+  • Allow diagrams to load fully before explaining
+  • Make eye contact with audience, not just the screen
+  • Speaker transitions should be smooth ("Now I will hand over to...")
+
+✓ DEMO CREDENTIALS:
+  • Username: admin
+  • Password: admin123
+  • Role: admin (shows Retrain and Users tabs)
+
+✓ PREDICTION EXAMPLE:
+  • Text: "Samsung Galaxy smartphone 128GB, dual camera, fast charging"
+  • Expected category: Electronics (or similar technology category)
+  • Confidence: typically 70-95%
+
+⚠️ IF A SERVICE SHOWS RED:
+  • Stay calm and continue presentation
+  • Mention: "In a live environment, we can quickly restart the service"
+  • Continue with other healthy services
+  • (Backstage: someone can run "make quick-check" or restart services)
+
+================================================================================
+QUICK REFERENCE: WHO PRESENTS WHAT
+================================================================================
+
+DIAGRAMS:
+  Speaker A: Diagram 1 (Architecture), Diagram 4 (Monitoring), Diagram 5 (Tech Stack)
+  Speaker B: Diagram 2 (Microservices), Diagram 3 (ML Pipeline)
+
+TABS/PANELS:
+  Speaker A: Dashboard, Predict, History, Retrain (explain only)
+  Speaker B: Users (for security demo)
+
+LIVE DEMOS:
+  Speaker A: Login, Health check, Prediction, Navigation
+  Speaker B: Diagram explanations, Security walkthrough
+
+TECHNICAL DEPTH:
+  Speaker A: User-facing features, live demonstrations, monitoring
+  Speaker B: Architecture, data flow, ML pipeline, security, conclusion
+
+
+================================================================================
+SEGMENT 1 (0:00 - 5:00) | SPEAKER A
+"Introduction, Dashboard, and System Architecture Overview"
+Estimated Words: ~680
+================================================================================
+
+[Dashboard is open in browser at http://localhost:8082. Login page is visible.]
+
+Good morning, everyone. My name is [Speaker A], and together with [Speaker B],
+we are going to present to you our final project: a complete MLOps system
+for Rakuten product classification.
+
+The problem we set out to solve is this: Rakuten, one of the largest
+e-commerce platforms in the world, has millions of products listed by
+merchants. Each product has a text description, and it needs to be
+classified into the correct product category. Doing this manually is
+impossible at scale. So we built an end-to-end machine learning system
+that automates this classification, and what you see right now is the
+central dashboard that ties everything together.
+
+Let me log in to show you.
+
+[Type "admin" in the username field, "admin123" in the password field,
+and click "Sign In".]
+
+We have a full authentication system. Every user gets a secure token
+when they log in. Notice in the top-right corner it shows my username
+and my role, which is "admin." Admin users have additional capabilities
+that regular users do not, like retraining the model and managing users.
+We will demonstrate those later.
+
+[The Dashboard panel is now visible. Point to the Service Health grid
+at the top showing 6 cards.]
+
+This is the system dashboard. Let me start with the most critical part:
+the service health overview. Our system is not a single application. It
+is a distributed microservices architecture running thirteen Docker
+containers. Right here you can see the health status of our six core
+services, all showing green, which means healthy.
+
+[Point to each card as you name it.]
+
+The API Gateway on port 8080 is the single entry point. Every request
+from this dashboard goes through it first. The Data Service on port 5001
+handles loading and preprocessing our dataset. The Training Service on
+port 5002 manages the model training process. The Prediction Service on
+port 5003 loads our trained LSTM model and runs real-time inference. The
+Auth Service on port 5004 handles all authentication and role-based
+access control. And MLflow on port 5000 tracks every experiment we run.
+
+[Click the "Refresh Health" button.]
+
+When I click "Refresh Health," the dashboard sends asynchronous requests
+to every service health endpoint and updates these status indicators in
+real time. This is not mocked data. These are live HTTP calls to our
+running containers.
+
+[Scroll down to the "Architecture Diagrams" section. Click on the first
+diagram: "1. Complete Architecture (13 Containers)". It opens in full-screen
+overlay mode.]
+
+Now let me show you the complete system architecture. At the top, you see
+the User Layer: the Web UI served by Nginx on port 8082 and the Auth Service
+on port 5004. Every request from the user goes down through the API Gateway,
+which is the purple box in the center, on port 8080. The Gateway acts as a
+reverse proxy, it verifies your authentication token with the Auth Service
+before forwarding any request.
+
+Below the Gateway, you see the ML Pipeline layer in orange: three
+microservices that form the core of our machine learning workflow. The Data
+Service loads and preprocesses raw CSV data. The Training Service trains our
+LSTM neural network and logs everything to MLflow. The Prediction Service
+loads the trained model and serves real-time classifications.
+
+Below that, the Data Layer shows our raw data storage with DVC for version
+control. The Experiment Tracking section shows MLflow. The Orchestration
+section shows Apache Airflow with its webserver and scheduler. And at the
+bottom, the Monitoring layer: Prometheus scrapes metrics from every service,
+and Grafana visualizes them. GitHub Actions handles our CI/CD pipeline.
+
+All thirteen containers communicate over a single Docker bridge network
+called mlops_network.
+
+[Click anywhere to close the diagram overlay.]
+
+Now I will hand over to [Speaker B], who will explain how these services
+communicate and how data flows through our ML pipeline.
+
+
+================================================================================
+SEGMENT 2 (5:00 - 10:00) | SPEAKER B
+"Microservices Communication and ML Pipeline Deep Dive"
+Estimated Words: ~650
+================================================================================
+
+[Navigate to the "Architecture Diagrams" section. Click the second diagram:
+"2. Microservices Communication".]
+
+Thank you, [Speaker A]. You have shown the complete architecture and our
+technology stack. Now let me explain how these services actually communicate
+with each other and how data flows through our ML pipeline.
+
+This diagram zooms into the communication patterns. Look at the arrows.
+The API Gateway communicates with all four backend services via REST API
+calls. The key arrow labeled "verify token" shows that every protected
+request triggers a call to the Auth Service. The green arrow from Training
+Service to MLflow shows where experiment metrics are logged. The red arrows
+from Prometheus show it actively scraping the /metrics endpoint from all
+four Flask services every fifteen seconds. And the yellow "PromQL" arrow
+shows Grafana querying Prometheus for visualization data.
+
+Notice that Airflow connects to the Training Service with "triggers DAG."
+This is how admin-initiated retraining works: the API Gateway calls the
+Airflow REST API, which triggers a DAG that orchestrates the entire
+retraining pipeline.
+
+[Click anywhere to close. Click the third diagram: "3. ML Pipeline -
+From Data to Prediction".]
+
+This diagram is extremely important because it shows the journey from
+raw data all the way to a live prediction. Follow it left to right.
+
+We start with five point six gigabytes of raw data: CSV files and images.
+The second step is preprocessing, where we perform tokenization and text
+cleaning using NLTK. We remove HTML tags, filter out non-alphabetic
+characters, remove French stopwords, and apply lemmatization. We truncate
+every description to its first ten words.
+
+Then feature engineering: we convert words to integer sequences using a
+Keras tokenizer with a vocabulary of ten thousand words, and pad every
+sequence to a length of ten.
+
+The LSTM Training stage trains our neural network for ten epochs across
+twenty-seven product categories. After training, model evaluation logs
+loss and accuracy metrics to MLflow. The trained model is then registered
+in the MLflow Model Registry for versioning. And finally, the Prediction
+API serves classifications in real time.
+
+Notice the three colored bars at the bottom: DVC covers the reproducible
+data pipeline, MLflow covers experiment tracking from training through
+deployment, and Airflow orchestrates the entire end-to-end workflow.
+
+Now [Speaker A] will show you the live features in action.
+
+
+================================================================================
+SEGMENT 3 (10:00 - 15:00) | SPEAKER A
+"Live Demonstrations: Prediction, Retraining, and Monitoring"
+Estimated Words: ~680
+================================================================================
+
+[Navigate to the "Predict" tab by clicking "Predict" in the top navigation.]
+
+Thank you, [Speaker B]. Now let me show you the system doing what it was
+built to do: classifying products. This is the Predict panel.
+
+[Click into the textarea and type: "Samsung Galaxy smartphone 128GB,
+dual camera, fast charging"]
+
+I am entering a product description: "Samsung Galaxy smartphone 128GB,
+dual camera, fast charging."
+
+[Click the "Classify" button. Wait for the result to appear.]
+
+And there it is. The system classified this as a clothing category with
+a confidence score shown in the green bar below. Let me explain what
+happened behind the scenes in that one click.
+
+The dashboard sent a POST request with my text and my Bearer token to
+the API Gateway. The Gateway first verified my token by calling the Auth
+Service. After validation, it forwarded my text to the Prediction Service.
+Inside the Prediction Service, the text went through the exact same
+preprocessing pipeline [Speaker B] described: HTML removal, regex cleaning,
+French stopword removal, lemmatization, and truncation to ten words. Then
+the Keras tokenizer converted those words to integer sequences, padded
+them to length ten, and fed them into our LSTM model. The model has an
+Embedding layer with one hundred twenty-eight dimensions, an LSTM layer
+with one hundred twenty-eight units, and a Dense output layer with
+twenty-seven neurons using softmax activation. It returned a probability
+distribution across all twenty-seven categories, and the highest
+probability became our prediction.
+
+[Navigate to the "History" tab by clicking "History" in the navigation.]
+
+Every prediction is automatically saved. This history panel shows the
+text, the predicted category, and the timestamp. This is stored in your
+browser's local storage, so it persists across sessions.
+
+[Navigate to the "Retrain" tab by clicking "Retrain" in the navigation.
+This tab is only visible because we are logged in as admin.]
+
+Now, one of the most powerful features: retraining. This panel is only
+visible to admin users. Here I can set the number of epochs and the
+batch size, then click "Start Retraining."
+
+[Point to the Epochs field showing "10" and the Batch Size field
+showing "32". Do NOT click the button.]
+
+When an admin clicks this button, it sends a request through the API
+Gateway to the Airflow REST API, which triggers a DAG called
+"retrain_pipeline." That DAG has four sequential tasks: first, it tells
+the Data Service to preprocess fresh data. Second, it starts training
+on the Training Service, which runs in a background thread so it does
+not block the server. Third, it polls the training status every ten
+seconds until completion, with a one-hour timeout. And fourth, it
+tells the Prediction Service to reload the newly trained model from
+disk. The entire cycle is fully automated.
+
+[Navigate back to "Dashboard" tab. Scroll down to the fourth diagram
+and click: "4. Monitoring Architecture".]
+
+This brings me to monitoring. This diagram shows how Prometheus, on port
+9090, scrapes the /metrics endpoint from four services every fifteen
+seconds. We implemented custom Prometheus metrics in every Flask service
+using the prometheus_client library. We track request counts, request
+latency as histograms, service health, prediction counts per category,
+prediction confidence distributions, inference latency, training status,
+and training loss and accuracy.
+
+All of this data flows into Grafana through PromQL queries, giving us
+the live dashboards you saw embedded in our main interface earlier.
+
+[Click anywhere to close the diagram overlay.]
+
+Now [Speaker B] will cover our security measures, CI/CD pipeline,
+and what it takes to maintain this system in production.
+
+
+================================================================================
+SEGMENT 4 (15:00 - 20:00) | SPEAKER B
+"Technology Stack, Security, CI/CD, and Conclusion"
+Estimated Words: ~680
+================================================================================
+
+[Scroll down to the fifth diagram and click: "5. Technology Stack".]
+
+Thank you, [Speaker A]. Let me start by showing you our complete technology
+stack, from the bottom up.
+
+The bottom layer is Infrastructure: Docker Compose orchestrates all
+thirteen containers on a bridge network called mlops_network. Prometheus
+provides metrics collection. Python 3.11 is our runtime. And every
+container has health checks that Docker monitors continuously. If a
+service fails, Docker automatically restarts it.
+
+The Orchestration and CI layer includes Apache Airflow for DAG-based
+pipeline scheduling, DVC for data version control and reproducibility,
+GitHub Actions for continuous integration, and Nginx as our web server
+for the UI.
+
+The Data and Storage layer uses pandas and numpy for data manipulation,
+DVC for versioning our five point six gigabytes of raw data, SQLite for
+the authentication database, and PostgreSQL for Airflow's metadata.
+
+The Application and ML layer is where the core intelligence lives.
+TensorFlow and Keras power our LSTM model. NLTK handles natural language
+preprocessing. scikit-learn assists with data splitting. And Flask serves
+all four microservice APIs.
+
+The top layer, Presentation and UI, includes our custom Web UI, the API
+Gateway, plus the Grafana, MLflow, and Airflow user interfaces.
+
+[Click anywhere to close. Navigate to the "Users" tab by clicking
+"Users" in the navigation.]
+
+Now let me address security. This User Management panel shows our
+role-based access control system. We have two roles: admin and user.
+Regular users can only make predictions and view their history. Admins
+can retrain models, manage users, and access all system endpoints.
+
+[Point to the users table.]
+
+Authentication uses SHA-256 hashed passwords stored in SQLite. When a
+user logs in, the Auth Service generates a cryptographically secure
+random token of sixty-four hexadecimal characters. This token must be
+sent as a Bearer token in the Authorization header of every API request.
+Each new login invalidates the previous token, so stolen tokens become
+useless after the legitimate user logs in again.
+
+The API Gateway enforces authentication on every protected route. It
+verifies the token with the Auth Service before forwarding any request.
+Admin-only endpoints like retraining and user management perform an
+additional role check.
+
+For continuous integration, every push to our repository triggers a
+GitHub Actions pipeline. It runs flake8 for code linting, pytest for
+our test suite that covers data loading, text preprocessing, model
+architecture, tokenizer serialization, and authentication logic. It also
+checks that no large binary files were accidentally committed. If all
+tests pass, it builds Docker images for all five custom services as a
+smoke test.
+
+Now, what does it take to maintain this system? There are three key
+areas. First, monitoring: Prometheus and Grafana give us real-time
+visibility into service health, request latencies, and model performance.
+If prediction confidence drops or latency spikes, we know immediately.
+Second, retraining: the Airflow DAG allows us to retrain on fresh data
+at any time, either manually from the dashboard or on a daily schedule.
+Third, reproducibility: DVC tracks our data and pipeline stages, so
+any experiment can be reproduced exactly.
+
+[Navigate back to the "Dashboard" tab. Point to the full screen with
+all health indicators green.]
+
+To summarize what we have built: a production-grade MLOps system with
+thirteen containerized services, an LSTM neural network classifying
+products into twenty-seven categories, a complete pipeline from raw
+data to real-time predictions, experiment tracking with MLflow,
+orchestration with Airflow, performance monitoring with Prometheus
+and Grafana, secure role-based authentication, CI/CD with GitHub
+Actions, and this single dashboard that brings it all together.
+
+[Pause. Gesture to the screen.]
+
+Everything you see here is live, everything is containerized, and
+everything was built from scratch by us.
+
+Thank you for your time. We are happy to take any questions.
+
+
+================================================================================
+END OF SCRIPT
+================================================================================
+
+TIMING REFERENCE:
+- Segment 1 (Speaker A): ~680 words = ~4:30-5:00 at natural pace
+- Segment 2 (Speaker B): ~670 words = ~4:30-5:00 at natural pace
+- Segment 3 (Speaker A): ~680 words = ~4:30-5:00 at natural pace
+- Segment 4 (Speaker B): ~690 words = ~4:30-5:00 at natural pace
+- TOTAL: ~2720 words = ~18:00-20:00
+
+TIPS:
+- Practice clicking through the dashboard while speaking
+- Keep the browser zoomed to 90% so diagrams fit better on the projector
+- Use "Refresh Health" right before the presentation to show live data
+- Do NOT actually click "Start Retraining" during the presentation
+- Have a second product description ready in case you want a second demo
+  Example: "Samsung Galaxy smartphone 128GB, dual camera, fast charging"
+- If a service shows red during demo, run "make quick-check" backstage
