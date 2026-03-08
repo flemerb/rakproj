@@ -53,11 +53,17 @@ def retrain():
         return jsonify({'status': 'error', 'message': 'Forbidden — admin only'}), 403
 
     data = request.get_json() or {}
-    trigger_airflow_dag('retrain_pipeline', conf={
-        'epochs': data.get('epochs', 10),
-        'batch_size': data.get('batch_size', 32)
-    })
-    return jsonify({'status': 'success', 'message': 'Retraining triggered via Airflow'})
+    try:
+        response = trigger_airflow_dag('retrain_pipeline', conf={
+            'epochs': data.get('epochs', 10),
+            'batch_size': data.get('batch_size', 32)
+        })
+        if response.status_code in [200, 201]:
+            return jsonify({'status': 'success', 'message': 'Retraining triggered via Airflow', 'dag_run': response.json()})
+        else:
+            return jsonify({'status': 'error', 'message': f'Airflow returned status {response.status_code}', 'details': response.text}), 500
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Failed to trigger Airflow: {str(e)}'}), 500
 # Prometheus metrics
 REQUEST_COUNT = Counter(
     'gateway_requests_total',

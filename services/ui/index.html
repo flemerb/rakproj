@@ -821,7 +821,10 @@
         </div>
       </div>
 
-      <button class="btn btn-secondary" onclick="checkHealth()" style="margin-bottom:1rem;font-size:0.7rem">Refresh Health</button>
+      <button class="btn btn-secondary" onclick="refreshDashboard()" style="margin-bottom:1rem;font-size:0.7rem">
+        <span id="refresh-spinner" class="spinner"></span>
+        <span id="refresh-text">Refresh Dashboard</span>
+      </button>
 
       <!-- External Links -->
       <div class="dash-section-title">External UIs</div>
@@ -1337,6 +1340,28 @@
         el.innerHTML = '<span class="status-dot red"></span>offline';
       }
     }
+  }
+
+  async function refreshDashboard() {
+    const spinner = document.getElementById('refresh-spinner');
+    const text = document.getElementById('refresh-text');
+    spinner.classList.add('show');
+    text.textContent = 'Refreshing...';
+
+    // Refresh health checks
+    await checkHealth();
+
+    // Reload Grafana iframe
+    const grafanaIframe = document.querySelector('.iframe-wrap iframe');
+    if (grafanaIframe) {
+      const currentSrc = grafanaIframe.src;
+      grafanaIframe.src = '';
+      setTimeout(() => { grafanaIframe.src = currentSrc; }, 100);
+    }
+
+    spinner.classList.remove('show');
+    text.textContent = 'Refresh Dashboard';
+    toast('Dashboard refreshed', 'success');
   }
 
   function openDiagram(el) {
