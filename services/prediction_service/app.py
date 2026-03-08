@@ -29,6 +29,7 @@ model = None
 tokenizer = None
 mapper = None
 inverse_mapper = None
+category_names = None
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
@@ -95,7 +96,7 @@ def metrics():
 
 def load_model_and_artifacts():
     """Load model, tokenizer and mapper"""
-    global model, tokenizer, mapper, inverse_mapper
+    global model, tokenizer, mapper, inverse_mapper, category_names
 
     try:
         # Load model
@@ -120,6 +121,15 @@ def load_model_and_artifacts():
                 mapper = {int(k): int(v) for k, v in mapper_raw.items()}
                 inverse_mapper = {v: k for k, v in mapper.items()}
             print(f"Mapper loaded from {mapper_path}")
+
+        # Load category names
+        category_names_path = f"{MODELS_PATH}/category_names.json"
+        if os.path.exists(category_names_path):
+            with open(category_names_path, 'r', encoding='utf-8') as f:
+                category_names = json.load(f)
+            print(f"Category names loaded from {category_names_path}")
+        else:
+            print(f"Warning: Category names file not found at {category_names_path}")
 
         loaded = model is not None
         MODEL_LOADED.set(1 if loaded else 0)
@@ -214,13 +224,17 @@ def predict():
         PREDICTION_COUNT.labels(predicted_class=str(predicted_class)).inc()
         PREDICTION_CONFIDENCE.observe(confidence)
 
-        # Get real category if mapper exists
-        real_category = inverse_mapper.get(predicted_class, predicted_class) if inverse_mapper else predicted_class
+        # Get category name
+        category_name = category_names.get(str(predicted_class), f"Category {predicted_class}") if category_names else predicted_class
+
+        # Get original product type code if mapper exists
+        original_code = inverse_mapper.get(predicted_class, predicted_class) if inverse_mapper else predicted_class
 
         return jsonify({
             'status': 'success',
             'predicted_class': predicted_class,
-            'real_category': real_category,
+            'real_category': category_name,
+            'original_code': original_code,
             'confidence': confidence,
             'all_probabilities': predictions[0].tolist()
         })
@@ -276,9 +290,13 @@ def predict_batch():
             PREDICTION_COUNT.labels(predicted_class=str(predicted_class)).inc()
             PREDICTION_CONFIDENCE.observe(confidence)
 
+            # Get category name
+            category_name = category_names.get(str(predicted_class), f"Category {predicted_class}") if category_names else predicted_class
+
             results.append({
                 'text': text[:50] + '...' if len(text) > 50 else text,
                 'predicted_class': predicted_class,
+                'category_name': category_name,
                 'confidence': confidence
             })
 
