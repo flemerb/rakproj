@@ -1,6 +1,6 @@
-# Rakuten MLOps Project
+# Rakuten MLOps Project — Phase 2
 
-**A production-ready ML classification system that categorizes e-commerce product descriptions into 27 Rakuten product categories using an LSTM neural network. Features a complete MLOps pipeline with microservices architecture, experiment tracking, orchestration, and real-time monitoring.**
+A production-ready ML classification system that categorizes e-commerce product descriptions into 27 Rakuten product categories using an LSTM neural network. Features a complete MLOps pipeline with microservices architecture, experiment tracking, orchestration, and real-time monitoring.
 
 ---
 
@@ -93,7 +93,7 @@ This project implements a complete MLOps workflow for text classification on Rak
 
 - **Experiment Tracking**: All training runs logged to MLflow with metrics, params, and artifacts
 - **Data Versioning**: DVC pipeline for reproducible data processing
-- **Workflow Orchestration**: Apache Airflow DAG for automated admin-triggered retraining
+- **Workflow Orchestration**: Apache Airflow DAGs for automated retraining
 - **Model Registry**: MLflow model registry for version management
 - **Real-time Monitoring**: Prometheus metrics + Grafana dashboards
 - **Production Deployment**: Docker Compose with health checks and auto-restart
@@ -259,40 +259,15 @@ Real-time inference API.
 - `POST /model/load` - Reload model from disk
 - `GET /model/info` - Active model metadata
 
-**Single Prediction Response Format**:
+**Response Format**:
 ```json
 {
-  "status": "success",
   "predicted_class": 12,
-  "real_category": "Electronics - Smartphones",
-  "original_code": "prdtypecode_40",
+  "category_name": "Electronics - Smartphones",
   "confidence": 0.923,
   "all_probabilities": [0.001, 0.002, ..., 0.923, ...]
 }
 ```
-
-**Batch Prediction Response Format**:
-```json
-{
-  "status": "success",
-  "predictions": [
-    {
-      "text": "Pull en laine rouge...",
-      "predicted_class": 5,
-      "category_name": "Clothing",
-      "confidence": 0.87
-    },
-    {
-      "text": "Ordinateur portable gaming...",
-      "predicted_class": 12,
-      "category_name": "Electronics",
-      "confidence": 0.91
-    }
-  ]
-}
-```
-
-**Note**: Single prediction uses `"real_category"` while batch prediction uses `"category_name"` (implementation inconsistency).
 
 **Features**:
 - Automatic text preprocessing
@@ -319,27 +294,23 @@ Experiment tracking and model registry.
 
 ### Apache Airflow (Port 8081)
 
-Workflow orchestration for model retraining.
+Workflow orchestration and scheduling.
 
-**Implemented DAG**:
+**DAGs**:
 
 | DAG | Trigger | Description | Steps |
 |-----|---------|-------------|-------|
-| `retrain_pipeline` | Admin-triggered via API | Model retraining workflow | preprocess → train → wait → reload |
+| `rakproj_ml_pipeline` | Daily / Manual | Full ML pipeline | import → preprocess → train |
+| `predict_pipeline` | API-triggered | Ensure model ready | load model → predict |
+| `retrain_dag` | Admin-triggered | Model retraining | preprocess → train → wait → reload |
 
-**Retraining Workflow Details**:
-1. **preprocess_new_data** - Calls data_service to preprocess latest data
-2. **start_training** - Calls training_service to start LSTM training
-3. **wait_for_training_completion** - Polls training_service every 10s (max 1 hour)
-4. **reload_model_in_prediction_service** - Refreshes model in prediction service
-
-**Configuration Parameters**:
-- `epochs` (default: 10)
-- `batch_size` (default: 32)
+**Retraining Workflow** (`retrain_dag`):
+1. Preprocess latest data (calls data_service)
+2. Start training (calls training_service)
+3. Poll for completion (every 10s, max 1 hour)
+4. Reload model in prediction service
 
 **Access**: http://localhost:8081 (admin/admin)
-
-**Note**: Predictions are handled by the prediction_service microservice, NOT by Airflow. The DAG is only for retraining orchestration.
 
 ### Web Dashboard (Port 8082)
 
@@ -410,8 +381,7 @@ Metrics visualization and monitoring dashboards.
 4. View results:
    - Predicted category name
    - Confidence score (percentage)
-   - Product type code
-   - Full probability distribution
+   - Full probability distribution (optional)
 
 ### 3. Admin Panel (Admin Users Only)
 
@@ -431,8 +401,6 @@ Metrics visualization and monitoring dashboards.
    - Batch size (default: 32)
 3. Click "Start Retraining"
 4. Monitor progress in Airflow UI (http://localhost:8081)
-   - Watch the `retrain_pipeline` DAG execution
-   - Each task shows status: queued → running → success
 
 ### 4. Viewing Metrics
 
@@ -494,10 +462,8 @@ curl -X POST http://localhost:8080/api/v1/predict \
 
 # Response:
 # {
-#   "status": "success",
 #   "predicted_class": 12,
-#   "real_category": "Electronics - Smartphones",
-#   "original_code": "prdtypecode_40",
+#   "category_name": "Electronics - Smartphones",
 #   "confidence": 0.923,
 #   "all_probabilities": [0.001, 0.002, ..., 0.923, ...]
 # }
@@ -517,20 +483,9 @@ curl -X POST http://localhost:8080/api/v1/predict/batch \
 
 # Response:
 # {
-#   "status": "success",
 #   "predictions": [
-#     {
-#       "text": "Pull en laine rouge",
-#       "predicted_class": 5,
-#       "category_name": "Clothing",
-#       "confidence": 0.87
-#     },
-#     {
-#       "text": "Ordinateur portable gaming",
-#       "predicted_class": 12,
-#       "category_name": "Electronics",
-#       "confidence": 0.91
-#     }
+#     {"predicted_class": 5, "category_name": "Clothing", "confidence": 0.87},
+#     {"predicted_class": 12, "category_name": "Electronics", "confidence": 0.91}
 #   ]
 # }
 ```
@@ -721,13 +676,12 @@ models/
 4. **Stopword Removal**: Filter French stopwords
 5. **Lemmatization**: Reduce to base forms (WordNet)
 6. **Sequence Generation**: Convert to integer sequences (Keras Tokenizer)
-7. **Padding**: Pad sequences to max_sequence_length (10 tokens)
+7. **Padding**: Pad sequences to max_sequence_length
 
 ### Product Categories
 
 The model classifies into **27 Rakuten product categories**:
 
-Examples include:
 - Clothing & Accessories
 - Electronics & Computers
 - Home & Garden
@@ -869,37 +823,19 @@ rakproj/
 ├── dvc.yaml                        # DVC pipeline definition
 ├── requirements.txt                # Python dependencies
 ├── Makefile                        # Automation commands
-├── README.md                       # Project README
-├── PROJECT_COMPLETE_DOCUMENTATION.md  # This file (100% verified)
 │
 ├── services/                       # Microservices
 │   ├── api_gateway/               # Port 8080 - Central router
-│   │   ├── app.py                 # Flask application
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
 │   ├── auth_service/              # Port 5004 - Authentication
-│   │   ├── app.py                 # User management & token verification
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
 │   ├── data_service/              # Port 5001 - Data management
-│   │   ├── app.py                 # Data loading & preprocessing
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
 │   ├── training_service/          # Port 5002 - Model training
-│   │   ├── app.py                 # Training orchestration & MLflow
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
 │   ├── prediction_service/        # Port 5003 - Inference
-│   │   ├── app.py                 # Single & batch predictions
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
 │   └── ui/                        # Port 8082 - Web dashboard
-│       ├── index.html             # Login & prediction interface
-│       ├── Dockerfile
-│       └── nginx.conf
 │
 ├── dags/                          # Apache Airflow DAGs
-│   └── retrain_dag.py            # Admin-triggered retraining (retrain_pipeline)
+│   ├── rakproj_pipeline.py       # Daily ML pipeline
+│   ├── predict_dag.py            # On-demand prediction
+│   └── retrain_dag.py            # Admin-triggered retraining
 │
 ├── airflow/                       # Airflow configuration
 │   └── Dockerfile
@@ -908,56 +844,38 @@ rakproj/
 │   ├── main.py                   # Training entry point
 │   ├── data/
 │   │   ├── import_raw_data.py    # AWS S3 data download
-│   │   ├── make_dataset.py       # Preprocessing pipeline
-│   │   └── check_structure.py    # Data validation
+│   │   └── make_dataset.py       # Preprocessing pipeline
 │   ├── features/
 │   │   └── build_features.py     # DataImporter, TextPreprocessor
 │   ├── models/
-│   │   └── train_model.py        # TextLSTMModel, MLflowCallback
+│   │   └── train_model.py        # TextLSTMModel, callbacks
 │   └── visualization/
 │
 ├── data/
-│   ├── raw/                      # Raw CSV files from Rakuten
-│   │   ├── X_train_update.csv
-│   │   ├── X_test_update.csv
-│   │   └── Y_train_CVw08PX.csv
+│   ├── raw/                      # Raw CSV files
 │   └── preprocessed/             # Cleaned data
-│       ├── X_train_update.csv
-│       └── Y_train_CVw08PX.csv
 │
 ├── models/                        # Trained artifacts
-│   ├── best_lstm_model.h5        # Keras model weights
-│   ├── tokenizer_config.json     # Tokenizer configuration
-│   ├── mapper.json               # {index → product_type_code}
-│   ├── category_names.json       # {index → category_name}
+│   ├── best_lstm_model.h5        # Keras model
+│   ├── tokenizer_config.json     # Tokenizer config
+│   ├── mapper.json               # Category mapping
+│   ├── category_names.json       # Category names
 │   └── metrics.json              # Training metrics
 │
 ├── monitoring/                    # Monitoring stack
 │   ├── prometheus/
-│   │   └── prometheus.yml        # Scrape configuration (4 services)
+│   │   └── prometheus.yml        # Scrape configuration
 │   └── grafana/
-│       ├── provisioning/
-│       │   ├── datasources/      # Prometheus datasource
-│       │   └── dashboards/       # Dashboard provisioning
-│       ├── dashboards/
-│       │   └── mlops_dashboard.json  # Pre-built MLOps dashboard
-│       └── grafana.ini
+│       ├── provisioning/         # Data sources & dashboards
+│       └── dashboards/
+│           └── mlops_dashboard.json
 │
-├── mlruns/                        # MLflow experiments & artifacts
-│   ├── mlflow.db                 # SQLite backend
-│   └── <experiment_id>/          # Experiment runs
-│
-├── logs/                          # Application & Airflow logs
+├── mlruns/                        # MLflow experiments
+├── logs/                          # Application logs
 ├── tests/                         # Unit & integration tests
-│   ├── test_data.py
-│   ├── test_features.py
-│   ├── test_models.py
-│   ├── test_model_quality.py
-│   └── test_integration.py
-│
-├── MLFLOW_SETUP.md               # MLflow configuration guide
-├── DVC_SETUP.md                  # DVC setup instructions
-└── TESTING_GUIDE.md              # Testing procedures
+├── MLFLOW_SETUP.md
+├── DVC_SETUP.md
+└── TESTING_GUIDE.md
 ```
 
 ---
@@ -1212,54 +1130,39 @@ docker-compose logs | grep ERROR
 
 ---
 
-## All Services Summary
+## Project Status
 
-| Service | Port | Container | Purpose |
-|---------|------|-----------|---------|
-| API Gateway | 8080 | api_gateway | Central routing & auth verification |
-| Auth Service | 5004 | auth_service | User authentication & management |
-| Data Service | 5001 | data_service | Data loading & preprocessing |
-| Training Service | 5002 | training_service | Model training & MLflow logging |
-| Prediction Service | 5003 | prediction_service | Single & batch inference |
-| MLflow | 5000 | mlflow | Experiment tracking & model registry |
-| Airflow Webserver | 8081 | airflow-webserver | DAG management UI |
-| Airflow Scheduler | - | airflow-scheduler | DAG execution scheduler |
-| Airflow DB | - | airflow-db | PostgreSQL metadata store |
-| Web UI | 8082 | ui | Browser dashboard (Nginx) |
-| Prometheus | 9090 | prometheus | Metrics collection |
-| Grafana | 3000 | grafana | Metrics visualization |
-| Airflow Init | - | airflow-init | Airflow initialization |
+### Completed Features
 
-**Total**: 13 Docker containers
+- [x] Microservices architecture (7 services)
+- [x] Auth Service with role-based access control
+- [x] Apache Airflow orchestration (3 DAGs)
+- [x] Browser-based web UI
+- [x] MLflow experiment tracking & model registry
+- [x] DVC data & model versioning
+- [x] Docker Compose orchestration
+- [x] Prometheus metrics collection
+- [x] Grafana monitoring dashboards
+- [x] Complete API documentation
+- [x] Comprehensive testing suite
 
----
+### Future Enhancements
 
-## Project Features
-
-This project includes a complete MLOps implementation with the following capabilities:
-
-- **Microservices Architecture**: 6 independent services (API Gateway, Auth, Data, Training, Prediction, UI)
-- **Authentication & Authorization**: Role-based access control with admin and user roles
-- **Workflow Orchestration**: Apache Airflow for automated model retraining
-- **Experiment Tracking**: MLflow for tracking experiments and model registry
-- **Data Versioning**: DVC for reproducible data and model versioning
-- **Production Deployment**: 13 Docker containers with health checks and auto-restart
-- **Real-time Monitoring**: Prometheus metrics collection from all services
-- **Visualization Dashboards**: Pre-built Grafana dashboards for system monitoring
-- **Complete REST API**: Token-authenticated endpoints for all operations
-- **Comprehensive Testing**: Unit and integration tests for all components
-- **ML Model**: LSTM text classifier for 27 product categories
-- **NLP Pipeline**: French text preprocessing with lemmatization and stopword removal
-- **Batch Processing**: Support for single and batch predictions
-- **Health Monitoring**: Health check endpoints for all services
+- [ ] CI/CD pipeline (GitHub Actions / GitLab CI)
+- [ ] HTTPS & production secrets management (Vault, AWS Secrets Manager)
+- [ ] Kubernetes deployment manifests
+- [ ] Model A/B testing framework
+- [ ] Advanced data drift detection
+- [ ] Multi-language support (currently French-focused)
+- [ ] Model explainability (SHAP, LIME)
 
 ---
 
-## Additional Documentation
+## Documentation
 
-- **MLFLOW_SETUP.md**: MLflow configuration details
-- **DVC_SETUP.md**: DVC remote setup instructions
-- **TESTING_GUIDE.md**: Testing procedures and guidelines
+- **MLflow Setup**: See `MLFLOW_SETUP.md`
+- **DVC Configuration**: See `DVC_SETUP.md`
+- **Testing Guide**: See `TESTING_GUIDE.md`
 
 ---
 
